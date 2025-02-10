@@ -1,160 +1,169 @@
-html, body {
-    height: 100%;
-    margin: 0;
-    padding: 0;
-    overflow: hidden;
-    font-family: 'Roboto', sans-serif;
-}
-#map-container {
-    width: 100%;
-    height: 100%; /* Let it take remaining height */
-}
-#map {
-    width: 100%;
-    height: 100%;
-}
-#controls {
-    padding: 16px;
-    background-color: #fff;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-    border-bottom: 1px solid #ddd;
-    text-align: center;
-    z-index: 1000;
-    position: relative;
-    /* Remove fixed height, let content determine height */
-}
-#controls label, #controls input, #controls button {
+html, body { 
+    height: 100%; 
+    margin: 0; 
+    padding: 0; 
+    overflow: hidden; 
+    font-family: 'Roboto', sans-serif; 
+} 
+#map-container { 
+    width: 100%; 
+    height: 100%; /* Let it take remaining height */ 
+} 
+#map { 
+    width: 100%; 
+    height: 100%; 
+} 
+#controls { 
+    padding: 16px; 
+    background-color: #fff; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
+    border-bottom: 1px solid #ddd; 
+    text-align: center; 
+    z-index: 1001; /* Higher than the map (1000) and overlay */ 
+    position: absolute; /* Absolute positioning */ 
+    top: -320px; /* Initially hidden above the viewport */ 
+    left: 0; 
+    width: 100%; 
+    transition: top 0.3s ease; /* Smooth transition for hiding/showing */ 
+} 
+#controls.visible { 
+     top: 0; /* Visible at the top */ 
+} 
+#controls label, #controls input, #controls button { 
   margin: 8px;
-}
-/* Style for input fields - Material Design-like */
-#controls input[type="number"], #controls input[type="text"] {
-  padding: 10px 16px;
-  border: 1px solid #ddd;
-  border-radius: 4px;
-  font-size: 16px;
-  outline: none;
-  transition: border-color 0.3s;
-  box-sizing: border-box;
-}
-#controls input[type="number"]:focus, #controls input[type="text"]:focus {
-    border-color: #3f51b5;
-}
+} 
+/* Style for input fields - Material Design-like */ 
+#controls input[type="number"], #controls input[type="text"] { 
+    padding: 10px 16px; 
+    border: 1px solid #ddd; 
+    border-radius: 4px; 
+    font-size: 16px; 
+    outline: none; 
+    transition: border-color 0.3s; 
+    box-sizing: border-box; 
+} 
+#controls input[type="number"]:focus, #controls input[type="text"]:focus { 
+    border-color: #3f51b5; 
+} 
 
-h1 {
-  text-align: center;
-  color: #3f51b5;
-    margin-bottom: 0;
-    margin-top: 0; /* Remove top margin */
-}
-/* Custom marker colors */
-.red-marker {
-    background-color: red;
-    border-radius: 50%;
-    width: 12px;
-    height: 12px;
-    display: block;
-    margin: -6px 0 0 -6px;
-}
-.yellow-marker {
-    background-color: yellow;
-    border-radius: 50%;
-    width: 12px;
-    height: 12px;
-    display: block;
-    margin: -6px 0 0 -6px;
-}
-.green-marker {
-    background-color: green;
-    border-radius: 50%;
-    width: 12px;
-    height: 12px;
-    display: block;
-    margin: -6px 0 0 -6px;
-}
-#zillow-url-input {
-  width: 80%; /* Wider input */
-}
+h1 { 
+    text-align: center; 
+    color: #3f51b5; 
+    margin-bottom: 0; 
+    margin-top: 0; /* Remove top margin */ 
+    padding: 10px 16px; 
+    font-size: 1.5em; /*Adjust heading size*/ 
+    z-index: 1002; /* Higher than the map (1000) and overlay */ 
+} 
+/* Custom marker colors */ 
+.red-marker { 
+    background-color: red; 
+    border-radius: 50%; 
+    width: 12px; 
+    height: 12px; 
+    display: block; 
+    margin: -6px 0 0 -6px; 
+} 
+.yellow-marker { 
+    background-color: yellow; 
+    border-radius: 50%; 
+    width: 12px; 
+    height: 12px; 
+    display: block; 
+    margin: -6px 0 0 -6px; 
+} 
+.green-marker { 
+    background-color: green; 
+    border-radius: 50%; 
+    width: 12px; 
+    height: 12px; 
+    display: block; 
+    margin: -6px 0 0 -6px; 
+} 
+#zillow-url-input { 
+    width: 80%; /* Wider input */ 
+} 
 
-/* Material Design-like Button */
-#updateButton {
-    background-color: #3f51b5;
-    color: white;
-    padding: 10px 24px;
-    border: none;
-    border-radius: 4px;
-    cursor: pointer;
-    font-size: 16px;
-    text-transform: uppercase;
-    transition: background-color 0.3s;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
-}
+/* Material Design-like Button */ 
+#updateButton { 
+    background-color: #3f51b5; 
+    color: white; 
+    padding: 10px 24px; 
+    border: none; 
+    border-radius: 4px; 
+    cursor: pointer; 
+    font-size: 16px; 
+    text-transform: uppercase; 
+    transition: background-color 0.3s; 
+    box-shadow: 0 2px 4px rgba(0,0,0,0.2); 
+} 
 
-#updateButton:hover {
-    background-color: #303f9f;
-}
-#updateButton:focus {
-    outline: none;
-      box-shadow: 0 0 0 3px rgba(63, 81, 181, 0.3); /* Focus ring */
-}
-/* Loading indicator styles */
-#loading-overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    background-color: rgba(0, 0, 0, 0.5);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 1000;
-}
+#updateButton:hover { 
+    background-color: #303f9f; 
+} 
+#updateButton:focus { 
+    outline: none; 
+        box-shadow: 0 0 0 3px rgba(63, 81, 181, 0.3); /* Focus ring */ 
+} 
+/* Loading indicator styles */ 
+#loading-overlay { 
+    position: fixed; 
+    top: 0; 
+    left: 0; 
+    width: 100%; 
+    height: 100%; 
+    background-color: rgba(0, 0, 0, 0.5); 
+    display: none; 
+    justify-content: center; 
+    align-items: center; 
+    z-index: 1000; 
+} 
 
-.spinner {
-    border: 4px solid rgba(255, 255, 255, 0.3);
-    border-top: 4px solid #3498db;
-    border-radius: 50%;
-    width: 40px;
-    height: 40px;
-    animation: spin 1s linear infinite;
-}
+.spinner { 
+    border: 4px solid rgba(255, 255, 255, 0.3); 
+    border-top: 4px solid #3498db; 
+    border-radius: 50%; 
+    width: 40px; 
+    height: 40px; 
+    animation: spin 1s linear infinite; 
+} 
 
-@keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
-}
-.input-group {
-  display: flex;
-  align-items: center;
-  margin-bottom: 8px;
-    flex-wrap: nowrap; /* Prevent wrapping */
-    justify-content: center;
-}
+@keyframes spin { 
+    0% { transform: rotate(0deg); } 
+    100% { transform: rotate(360deg); } 
+} 
+.input-group { 
+    display: flex; 
+    align-items: center; 
+    margin-bottom: 8px; 
+    flex-wrap: nowrap; /* Prevent wrapping */ 
+    justify-content: center; 
+} 
 
-.input-group label {
-  margin-right: 8px;
-  white-space: nowrap;
-}
+.input-group label { 
+    margin-right: 8px; 
+    white-space: nowrap; 
+} 
 
-.input-row {
-  display: flex;
-  flex-wrap: wrap; /* Wrap on smaller screens */
-  justify-content: center; /* Center horizontally */
-  align-items: center; /* Center vertically */
-}
-/* Responsive adjustments */
-@media (max-width: 768px) {
-    .input-row {
-        flex-direction: column; /* Stack vertically on small screens */
-    }
-    .input-group {
-        width: 100%; /* Full width on small screens */
-        margin-bottom: 8px;
-    }
-    #controls input[type="number"], #controls input[type="text"] {
-        width: 100%; /* Full width inputs */
-    }
-    #zillow-url-input{
-      width: 95%;
-    }
+.input-row { 
+    display: flex; 
+    flex-wrap: wrap; /* Wrap on smaller screens */ 
+    justify-content: center; /* Center horizontally */ 
+    align-items: center; /* Center vertically */ 
+} 
+/* Responsive adjustments */ 
+@media (max-width: 768px) { 
+    .input-row { 
+        flex-direction: column; /* Stack vertically on small screens */ 
+    } 
+    .input-group { 
+        width: 100%; /* Full width on small screens */ 
+        margin-bottom: 8px; 
+    } 
+    #controls input[type="number"], #controls input[type="text"] { 
+        width: 100%; /* Full width inputs */ 
+    } 
+    #zillow-url-input{ 
+        width: 95%; 
+    } 
 }
