@@ -39,7 +39,7 @@ def calculate_cash_flow(property_data, loan_details, expense_rates):
     annual_property_management = annual_rent * expense_rates['property_management_rate']
     annual_vacancy = annual_rent * expense_rates['vacancy_rate']
     annual_maintenance = annual_rent * expense_rates['maintenance_rate']
-    annual_insurance = annual_rent * expense_rates['insurance_rate']
+    annual_insurance = property_data['price'] * expense_rates['insurance_rate']
     annual_property_taxes = property_data['price'] * expense_rates['property_taxes_rate']
     total_annual_expenses = (annual_mortgage + annual_hoa + annual_property_management +
                              annual_vacancy + annual_maintenance + annual_insurance +
@@ -121,7 +121,7 @@ def get_properties():
 
     default_loan_details = {
       "down_payment_percentage": 0.20,
-      "interest_rate": 0.07,
+      "interest_rate": 0.065,
       "loan_term": 30
     }
 
@@ -129,7 +129,7 @@ def get_properties():
       "property_management_rate": 0.08,
       "vacancy_rate": 0.05,
       "maintenance_rate": 0.05,
-      "insurance_rate": 0.01,
+      "insurance_rate": 0.005,
       "property_taxes_rate": 0.01
     }
 
@@ -143,7 +143,8 @@ def get_properties():
 
     # Process the (potentially cached) data
     processed_properties = []
-    for prop in all_properties:
+    print ("All properties = " + str(len(all_properties)))
+    for prop in all_properties:        
         prop['price'] = prop.get('price', 0)
         prop['rentZestimate'] = prop.get('rentZestimate', 0)
         rent = prop.get('rentZestimate')
