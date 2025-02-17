@@ -105,7 +105,7 @@ function updateMap() {
             properties.forEach(property => {
                 if (property.latitude && property.longitude) {
                     let markerColorClass = 'gray-marker';
-                    if (property.cash_on_cash_return !== null) {
+                    if (property.cash_on_cash_return !== null && property.rentZestimate != 0) {
                         if (property.cash_on_cash_return < -8) {
                             markerColorClass = 'red-marker';
                         } else if (property.cash_on_cash_return >= -8 && property.cash_on_cash_return < -4) {
