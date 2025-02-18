@@ -63,7 +63,6 @@ h1 {
     height: 12px;
     display: block;
     margin: -6px 0 0 -6px;  /* Center the default marker */
-    position: relative; /* Important for positioning the rank number */
 }
 
 
