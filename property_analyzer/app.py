@@ -2,57 +2,17 @@ import http.client
 import json
 from flask import Flask, jsonify, render_template, request
 from flask_cors import CORS
-import math
+from math_utils import calculate_cash_flow
 
 app = Flask(__name__)
-CORS(app, resources={r"/api/*": {"origins": "https://*.app.github.dev"}})
+CORS(app, resources={r"/api/*": {"origins": "https://*.app.github.dev"}})  # Consider more restrictive CORS in production
 
 # Store cached Zillow data and the URL it corresponds to
 cached_zillow_data = None
 cached_zillow_url = None
 
-def calculate_monthly_payment(principal, annual_interest_rate, loan_term_years):
-    if principal <= 0 or annual_interest_rate <= 0 or loan_term_years <=0:
-      return 0
+top_properties = None
 
-    monthly_interest_rate = annual_interest_rate / 12
-    number_of_payments = loan_term_years * 12
-    payment = principal * (monthly_interest_rate * (1 + monthly_interest_rate)**number_of_payments) / ((1 + monthly_interest_rate)**number_of_payments - 1)
-    return payment
-
-def calculate_cash_flow(property_data, loan_details, expense_rates):
-    if not all(key in property_data for key in ['price', 'rentZestimate']):
-        return None
-    if not all(key in loan_details for key in ['down_payment_percentage', 'interest_rate', 'loan_term']):
-        return None
-    if not all(key in expense_rates for key in ['property_management_rate', 'vacancy_rate', 'maintenance_rate', 'insurance_rate', 'property_taxes_rate']):
-        return None
-
-    annual_rent = property_data['rentZestimate'] * 12
-    down_payment = property_data['price'] * loan_details['down_payment_percentage']
-    loan_amount = property_data['price'] - down_payment
-    monthly_mortgage = calculate_monthly_payment(loan_amount, loan_details['interest_rate'], loan_details['loan_term'])
-    annual_mortgage = monthly_mortgage * 12
-    annual_hoa = property_data.get('hoa', 0) * 12  # Handle missing HOA
-    if annual_hoa is None:
-      annual_hoa = 0
-    annual_property_management = annual_rent * expense_rates['property_management_rate']
-    annual_vacancy = annual_rent * expense_rates['vacancy_rate']
-    annual_maintenance = annual_rent * expense_rates['maintenance_rate']
-    annual_insurance = property_data['price'] * expense_rates['insurance_rate']
-    annual_property_taxes = property_data['price'] * expense_rates['property_taxes_rate']
-    total_annual_expenses = (annual_mortgage + annual_hoa + annual_property_management +
-                             annual_vacancy + annual_maintenance + annual_insurance +
-                             annual_property_taxes)
-    annual_cash_flow = annual_rent - total_annual_expenses
-    cash_investment = down_payment + property_data.get('closing_costs', 0)
-    if(cash_investment == 0): return None
-    cash_on_cash_return = (annual_cash_flow / cash_investment) * 100
-
-    return {
-        'annual_cash_flow': annual_cash_flow,
-        'cash_on_cash_return': cash_on_cash_return
-    }
 
 def fetch_zillow_data(zillow_url, page=1):
     """Fetches property data from the Zillow RapidAPI, for a specific page."""
@@ -62,7 +22,8 @@ def fetch_zillow_data(zillow_url, page=1):
             'x-rapidapi-key': "f80c5fa134mshba6a5c4f6f4166fp1f6630jsnbf61a645f841",  # Replace with YOUR API Key
             'x-rapidapi-host': "zillow-com1.p.rapidapi.com"
         }
-        encoded_url =  zillow_url.replace(":", "%3A").replace("/", "%2F").replace("?", "%3F").replace("=", "%3D").replace("&", "%26").replace("{", "%7B").replace("}", "%7D").replace('"',"%22")
+        encoded_url = zillow_url.replace(":", "%3A").replace("/", "%2F").replace("?", "%3F").replace("=", "%3D").replace(
+            "&", "%26").replace("{", "%7B").replace("}", "%7D").replace('"', "%22")
 
         # Add the page parameter to the API request URL
         api_url = f"/searchByUrl?url={encoded_url}&page={page}"
@@ -71,7 +32,7 @@ def fetch_zillow_data(zillow_url, page=1):
         data = res.read()
 
         if res.status == 200:
-             return json.loads(data.decode("utf-8"))
+            return json.loads(data.decode("utf-8"))
         else:
             print(f"Error from Zillow API: {res.status} - {res.reason}")
             return None
@@ -110,11 +71,10 @@ def get_properties():
             page += 1
 
         cached_zillow_data = all_properties  # Cache the fetched data
-        cached_zillow_url = zillow_url      # Cache the URL
+        cached_zillow_url = zillow_url  # Cache the URL
     else:
         # Use cached data if the URL is the same
         all_properties = cached_zillow_data
-
 
     loan_details_json = request.args.get('loan_details')
     expense_rates_json = request.args.get('expense_rates')
@@ -134,17 +94,23 @@ def get_properties():
     }
 
     loan_details = default_loan_details
-    if(loan_details_json is not None):
-        loan_details = json.loads(loan_details_json)
+    if (loan_details_json is not None):
+        try:
+            loan_details = json.loads(loan_details_json)
+        except json.JSONDecodeError:
+            return jsonify({'error': 'Invalid loan_details JSON format'}), 400
 
     expense_rates = default_expense_rates
-    if(expense_rates_json is not None):
-      expense_rates = json.loads(expense_rates_json)
+    if (expense_rates_json is not None):
+        try:
+            expense_rates = json.loads(expense_rates_json)
+        except json.JSONDecodeError:
+             return jsonify({'error': 'Invalid expense_rates JSON format'}), 400
+
 
     # Process the (potentially cached) data
     processed_properties = []
-    print ("All properties = " + str(len(all_properties)))
-    for prop in all_properties:        
+    for prop in all_properties:
         prop['price'] = prop.get('price', 0)
         prop['rentZestimate'] = prop.get('rentZestimate', 0)
         rent = prop.get('rentZestimate')
@@ -162,14 +128,37 @@ def get_properties():
         else:
             prop['annual_cash_flow'] = None
             prop['cash_on_cash_return'] = None
-        processed_properties.append(prop) #append to new array
+        processed_properties.append(prop)
+
+    # Sort properties by annual cash flow (descending) and handle None values
+    sorted_properties = sorted(
+        processed_properties,
+        key=lambda x: (x.get('cash_on_cash_return') is not None, x.get('cash_on_cash_return')),
+        reverse=True
+    )
+
+    # Get the top properties (e.g., top 10) and add the rank
+    top_properties = sorted_properties[:10]
+    for rank, property in enumerate(top_properties, 1):  # Use enumerate for easy ranking
+        property['rank'] = rank
+
+    # Add rank to the *original* properties in processed_properties (important!)
+    ranked_property_zpids = {prop['zpid'] for prop in top_properties if 'zpid' in prop} # Use a set for efficient lookup
+    for prop in processed_properties:
+        if 'zpid' in prop and prop['zpid'] in ranked_property_zpids:
+            # Find matching property in top_properties using zpid
+            for top_prop in top_properties:
+                if 'zpid' in top_prop and top_prop['zpid'] == prop['zpid']:
+                    prop['rank'] = top_prop['rank']
+                    break  # Important: stop searching once found
 
 
-    return jsonify(processed_properties) #return the processed array
+    return jsonify(processed_properties)
 
 @app.route('/')
 def index():
     return render_template('index.html')
+
 
 if __name__ == '__main__':
     app.run(debug=True, host='0.0.0.0', port=5000)

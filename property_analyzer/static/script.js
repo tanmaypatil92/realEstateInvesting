@@ -122,8 +122,18 @@ function updateMap() {
                         markerColorClass += ' square';
                     }
 
+                    // Create the custom icon with the rank number *inside* the marker.
+                    let iconHtml = '';
+                    if (property.rank) {
+                        iconHtml = `<div class="marker-rank">${property.rank}</div>`;
+                    }
 
-                    const customIcon = L.divIcon({ className: markerColorClass });
+                    const customIcon = L.divIcon({
+                        className: markerColorClass,
+                        html: iconHtml, // Add the rank HTML here
+                        iconSize: property.rank ? [16, 16] : [12, 12],  // Adjust size if it has a rank
+                        iconAnchor: property.rank ? [14, 14] : [10, 10],    // Adjust anchor accordingly
+                    });
                     const marker = L.marker([property.latitude, property.longitude], { icon: customIcon });
 
                     // Create the address link.  Critically, check for a valid zpid.
