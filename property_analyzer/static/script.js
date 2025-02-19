@@ -2,15 +2,21 @@
 
 let map;
 let controlsTimeout; // Variable to hold the timeout ID
+let sidebarTimeout;
+let markerMap = new Map();
+
 
 function calculateMapHeight() {
-    // Since controls are absolutely positioned, the map should take up the full height
+    // Consider the sidebar width
+    const sidebarWidth = window.innerWidth <= 768 ? 0 : 320; // Sidebar width, 0 if mobile
     return window.innerHeight;
 }
 
 function setMapContainerHeight() {
     const mapContainer = document.getElementById('map-container');
     mapContainer.style.height = `${calculateMapHeight()}px`;
+    const sidebarWidth = window.innerWidth <= 768 ? 0 : 320; // Get sidebar width
+    mapContainer.style.width = `calc(100% - ${sidebarWidth}px)`;
 }
 
 function initializeMap() {
@@ -50,6 +56,98 @@ function hideControls() {
     controls.classList.add('hidden');  // Add the 'hidden' class
     controls.classList.remove('visible');
 
+}
+
+function showSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.add('visible');
+    sidebar.classList.remove('hidden');
+    clearTimeout(sidebarTimeout);
+}
+
+function hideSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    sidebar.classList.add('hidden');
+    sidebar.classList.remove('visible');
+}
+
+
+function updateSidebar(properties) {
+    const sidebarContent = document.getElementById('sidebar-content');
+    sidebarContent.innerHTML = ''; // Clear previous content
+
+    const validProperties = properties.filter(property => typeof property.rank === 'number');
+    const topProperties = validProperties.sort((a, b) => a.rank - b.rank).slice(0, 10);
+
+    topProperties.forEach(property => {
+        const propertyDiv = document.createElement('div');
+        propertyDiv.classList.add('sidebar-property');
+
+        let addressLink = "";
+        if (property.zpid) {
+            addressLink = `
+                <b><a href="https://www.zillow.com/homedetails/${property.zpid}_zpid/" target="_blank">${property.rank}. ${property.streetAddress}, ${property.city}, ${property.state} ${property.zipcode}</a></b><br>
+            `;
+        } else {
+            addressLink = `
+                <b>${property.rank}. ${property.streetAddress}, ${property.city}, ${property.state} ${property.zipcode}</b><br>
+            `;
+        }
+        propertyDiv.innerHTML = `
+            ${addressLink}
+            Price: $${property.price.toLocaleString()}<br>
+            ${property.cash_on_cash_return !== null ? `Cash-on-Cash Return: ${property.cash_on_cash_return.toFixed(2)}%<br>` : ''}
+            Bedrooms: ${property.bedrooms}, Bathrooms: ${property.bathrooms}<br>
+            Rent: $${property.rentZestimate.toLocaleString()}<br>
+            ${property.daysOnZillow !== null ? `Days on Zillow: ${property.daysOnZillow}<br>` : ''}
+            <hr>
+        `;
+
+        // Add mouseover and mouseout event listeners
+        propertyDiv.addEventListener('mouseover', () => {
+            highlightMarker(property.rank);
+        });
+        propertyDiv.addEventListener('mouseout', () => {
+            resetMarker(property.rank);
+        });
+
+        sidebarContent.appendChild(propertyDiv);
+    });
+    showSidebar();
+}
+
+// Function to highlight a marker
+function highlightMarker(rank) {
+    const marker = markerMap.get(rank);
+    if (marker) {
+        const icon = marker.getIcon();
+        // Store original size and anchor
+        icon.options.originalSize = icon.options.iconSize;
+        icon.options.originalAnchor = icon.options.iconAnchor;
+
+        // Increase size and adjust anchor
+        icon.options.iconSize = [32, 32]; // Example larger size
+        icon.options.iconAnchor = [16, 32]; // Adjust anchor accordingly
+        marker.setIcon(icon);
+        marker.setZIndexOffset(1000); // Bring to front
+
+    }
+}
+
+// Function to reset a marker's style
+function resetMarker(rank) {
+    const marker = markerMap.get(rank);
+    if (marker) {
+        const icon = marker.getIcon();
+        // Restore original size and anchor
+        if (icon.options.originalSize) {
+           icon.options.iconSize = icon.options.originalSize;
+           icon.options.iconAnchor = icon.options.originalAnchor;
+           marker.setIcon(icon);
+        }
+
+        marker.setZIndexOffset(0); // Reset Z-index
+    }
 }
 
 function updateMap() {
@@ -98,6 +196,7 @@ function updateMap() {
             } else {
                 initializeMap();
             }
+            markerMap.clear(); // Clear the map
 
             const bounds = L.latLngBounds();
             let validProperties = false;
@@ -190,6 +289,9 @@ function updateMap() {
 
                     bounds.extend([property.latitude, property.longitude]);
                     validProperties = true;
+
+                    // Store the marker in the markerMap, using the rank as the key
+                    markerMap.set(property.rank, marker);
                 }
             });
 
@@ -197,6 +299,7 @@ function updateMap() {
                 map.fitBounds(bounds);
             }
             map.invalidateSize();
+            updateSidebar(properties); // Update the sidebar
 
         })
         .catch(error => {

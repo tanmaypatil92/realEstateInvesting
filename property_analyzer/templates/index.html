@@ -1,74 +1,87 @@
 <!DOCTYPE html>
- <html lang="en">
- <head>
-     <meta charset="UTF-8">
-     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-     <title>Rental Property Analyzer</title>
-     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
-     <link rel="stylesheet" href="static/styles.css">
-     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+<html lang="en">
 
- </head>
- <body>
-     <div id="controls">
-      <h1>Rental Property Analyzer</h1> 
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rental Property Analyzer</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <link rel="stylesheet" href="static/styles.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+
+</head>
+
+<body>
+  <div id="controls">
+    <h1>Rental Property Analyzer</h1>
+    <div class="input-group">
+      <label for="zillowUrl">Zillow URL:</label>
+      <input type="text" id="zillowUrl" name="zillowUrl" placeholder="Enter Zillow URL"
+        value="https://www.zillow.com/dunwoody-ga-30360/?searchQueryState=%7B%22pagination%22%3A%7B%7D%2C%22usersSearchTerm%22%3A%2230360%22%2C%22mapBounds%22%3A%7B%22west%22%3A-84.36232590551758%2C%22east%22%3A-84.16148209448242%2C%22south%22%3A33.89577159630012%2C%22north%22%3A33.96670114674591%7D%2C%22regionSelection%22%3A%5B%7B%22regionId%22%3A71076%2C%22regionType%22%3A7%7D%5D%2C%22isMapVisible%22%3Atrue%2C%22filterState%22%3A%7B%22price%22%3A%7B%22min%22%3A100000%7D%2C%22mp%22%3A%7B%22min%22%3A512%7D%2C%22sort%22%3A%7B%22value%22%3A%22globalrelevanceex%22%7D%2C%22ah%22%3A%7B%22value%22%3Atrue%7D%7D%2C%22isListVisible%22%3Atrue%2C%22mapZoom%22%3A13%7D">
+      <button id="updateButton">Update Map</button>
+    </div>
+
+    <div class="input-row">
       <div class="input-group">
-         <label for="zillowUrl">Zillow URL:</label>
-         <input type="text" id="zillowUrl" name="zillowUrl" placeholder="Enter Zillow URL"  value="https://www.zillow.com/dunwoody-ga-30360/?searchQueryState=%7B%22pagination%22%3A%7B%7D%2C%22usersSearchTerm%22%3A%2230360%22%2C%22mapBounds%22%3A%7B%22west%22%3A-84.36232590551758%2C%22east%22%3A-84.16148209448242%2C%22south%22%3A33.89577159630012%2C%22north%22%3A33.96670114674591%7D%2C%22regionSelection%22%3A%5B%7B%22regionId%22%3A71076%2C%22regionType%22%3A7%7D%5D%2C%22isMapVisible%22%3Atrue%2C%22filterState%22%3A%7B%22price%22%3A%7B%22min%22%3A100000%7D%2C%22mp%22%3A%7B%22min%22%3A512%7D%2C%22sort%22%3A%7B%22value%22%3A%22globalrelevanceex%22%7D%2C%22ah%22%3A%7B%22value%22%3Atrue%7D%7D%2C%22isListVisible%22%3Atrue%2C%22mapZoom%22%3A13%7D">
-         <button id="updateButton">Update Map</button>
-        </div>
+        <label for="downPayment">Down Payment %:</label>
+        <input type="number" id="downPayment" value="20">
+      </div>
+      <div class="input-group">
+        <label for="interestRate">Interest Rate %:</label>
+        <input type="number" id="interestRate" value="6.5" step="0.1">
+      </div>
+      <div class="input-group">
+        <label for="loanTerm">Loan Term (Years):</label>
+        <input type="number" id="loanTerm" value="30">
+      </div>
+    </div>
+    <div class="input-row">
+      <div class="input-group">
+        <label for="propMgmt">Prop Mgmt %:</label>
+        <input type="number" id="propMgmt" value="8">
+      </div>
+      <div class="input-group">
+        <label for="vacancy">Vacancy %:</label>
+        <input type="number" id="vacancy" value="5">
+      </div>
+      <div class="input-group">
+        <label for="maintenance">Maintenance %:</label>
+        <input type="number" id="maintenance" value="5">
+      </div>
+    </div>
 
-       <div class="input-row">
-         <div class="input-group">
-           <label for="downPayment">Down Payment %:</label>
-           <input type="number" id="downPayment" value="20">
-         </div>
-         <div class="input-group">
-           <label for="interestRate">Interest Rate %:</label>
-           <input type="number" id="interestRate" value="6.5" step="0.1">
-         </div>
-         <div class="input-group">
-            <label for="loanTerm">Loan Term (Years):</label>
-           <input type="number" id="loanTerm" value="30">
-         </div>
-       </div>
-         <div class="input-row">
-           <div class="input-group">
-             <label for="propMgmt">Prop Mgmt %:</label>
-             <input type="number" id="propMgmt" value="8">
-         </div>
-         <div class="input-group">
-            <label for="vacancy">Vacancy %:</label>
-            <input type="number" id="vacancy" value="5">
-         </div>
-         <div class="input-group">
-           <label for="maintenance">Maintenance %:</label>
-           <input type="number" id="maintenance" value="5">
-         </div>
-         </div>
+    <div class="input-row">
+      <div class="input-group">
+        <label for="insurance">Insurance %:</label>
+        <input type="number" id="insurance" value="0.5">
+      </div>
+      <div class="input-group">
+        <label for="propTaxes">Property Taxes %:</label>
+        <input type="number" id="propTaxes" value="1">
+      </div>
+    </div>
 
-       <div class="input-row">
-           <div class="input-group">
-               <label for="insurance">Insurance %:</label>
-               <input type="number" id="insurance" value="0.5">
-           </div>
-         <div class="input-group">
-             <label for="propTaxes">Property Taxes %:</label>
-             <input type="number" id="propTaxes" value="1">
-           </div>
-       </div>
 
-       
-     </div>
+  </div>
 
-     <div id="map-container">
-         <div id="map"></div>
-     </div>
-     <div id="loading-overlay">
-       <div class="spinner"></div>
-     </div>
+  <div id="map-container">
+    <div id="map"></div>
+  </div>
+  <div id="sidebar" class="hidden">
+    <h2>Top Properties</h2>
+    <div id="sidebar-content">
+    </div>
+  </div>
 
-     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
-     <script src="static/script.js"></script>
- </body>
- </html>
+  <div id="loading-overlay">
+    <div class="spinner"></div>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin="">
+    </script>
+  <script src="static/script.js"></script>
+</body>
+
+</html>

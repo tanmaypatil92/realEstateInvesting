@@ -175,19 +175,67 @@ h1 {
     justify-content: center; /* Center horizontally */
     align-items: center; /* Center vertically */
 }
-/* Responsive adjustments */
+
+/* styles.css (continued from previous response) */
+
+/* Sidebar Styles */
+#sidebar {
+    position: absolute;
+    top: 0;
+    right: -320px; /* Initially hidden */
+    width: 320px;
+    height: 100%;
+    background-color: #f8f9fa;
+    border-left: 1px solid #ddd;
+    overflow-y: auto; /* Enable vertical scrolling */
+    z-index: 1002; /* Above the map */
+    transition: right 0.3s ease;
+}
+
+#sidebar.visible {
+    right: 0; /* Show sidebar */
+}
+
+#sidebar h2 {
+    text-align: center;
+    padding: 10px;
+    margin: 0;
+    background-color: #e9ecef;
+    border-bottom: 1px solid #ddd;
+}
+
+.sidebar-property {
+    padding: 10px;
+    border-bottom: 1px solid #eee; /* Lighter separator */
+    font-size: 0.9em; /* Slightly smaller font */
+}
+
+.sidebar-property a { /* Style for Zillow links in sidebar */
+    color: #007bff; /* Or your preferred link color */
+    text-decoration: none; /* Remove underline */
+}
+
+.sidebar-property a:hover {
+    text-decoration: underline; /* Add underline on hover */
+}
+.sidebar-property hr {
+  margin-top: 0.5rem;
+  margin-bottom: 0.5rem;
+  border: 0;
+  border-top: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+
+/* Responsive adjustments for sidebar and map */
 @media (max-width: 768px) {
-    .input-row {
-        flex-direction: column; /* Stack vertically on small screens */
+    #sidebar {
+        width: 100%; /* Full width on mobile */
+        right: -100%; /* Hide completely on small screens by default*/
+        border-left: none; /* Remove border */
     }
-    .input-group {
-        width: 100%; /* Full width on small screens */
-        margin-bottom: 8px;
-    }
-    #controls input[type="number"], #controls input[type="text"] {
-        width: 100%; /* Full width inputs */
-    }
-    #zillow-url-input{
-        width: 95%;
+
+    /* No need for a separate .visible class on mobile, it's either full-screen or hidden */
+    #map-container {
+        width: 100%;  /* Map takes full width */
     }
 }
