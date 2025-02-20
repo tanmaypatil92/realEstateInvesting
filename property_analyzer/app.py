@@ -5,6 +5,9 @@ from flask_cors import CORS
 from math_utils import calculate_cash_flow
 
 app = Flask(__name__)
+
+RAPID_ZILLOW_API_KEY = "f80c5fa134mshba6a5c4f6f4166fp1f6630jsnbf61a645f841"
+
 CORS(app, resources={r"/api/*": {"origins": "https://*.app.github.dev"}})  # Consider more restrictive CORS in production
 
 # Store cached Zillow data and the URL it corresponds to
@@ -14,12 +17,36 @@ cached_zillow_url = None
 top_properties = None
 
 
-def fetch_zillow_data(zillow_url, page=1):
+def get_property_details(zpid):
+    """ Fetches property data from the Zillow RapidAPI, for a specific zpid."""
+    try:
+        conn = http.client.HTTPSConnection("zillow-com1.p.rapidapi.com")
+        headers = {
+            'x-rapidapi-key': RAPID_ZILLOW_API_KEY,
+            'x-rapidapi-host': "zillow-com1.p.rapidapi.com"
+        }
+
+        # Add the page parameter to the API request URL
+        api_url = f"/property?zpid={zpid}"
+        conn.request("GET", api_url, headers=headers)
+        res = conn.getresponse()
+        data = res.read()
+
+        if res.status == 200:
+            return json.loads(data.decode("utf-8"))
+        else:
+            print(f"Error from Zillow API: {res.status} - {res.reason}")
+            return None
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        return None
+
+def search_property_by_uri(zillow_url, page=1):
     """Fetches property data from the Zillow RapidAPI, for a specific page."""
     try:
         conn = http.client.HTTPSConnection("zillow-com1.p.rapidapi.com")
         headers = {
-            'x-rapidapi-key': "f80c5fa134mshba6a5c4f6f4166fp1f6630jsnbf61a645f841",  # Replace with YOUR API Key
+            'x-rapidapi-key': RAPID_ZILLOW_API_KEY,
             'x-rapidapi-host': "zillow-com1.p.rapidapi.com"
         }
         encoded_url = zillow_url.replace(":", "%3A").replace("/", "%2F").replace("?", "%3F").replace("=", "%3D").replace(
@@ -56,7 +83,7 @@ def get_properties():
         total_pages = 1
 
         while page <= total_pages:
-            zillow_data = fetch_zillow_data(zillow_url, page)
+            zillow_data = search_property_by_uri(zillow_url, page)
             if not zillow_data:
                 return jsonify({'error': 'Failed to fetch data from Zillow API'}), 500
 
@@ -141,6 +168,14 @@ def get_properties():
     top_properties = sorted_properties[:10]
     for rank, property in enumerate(top_properties, 1):  # Use enumerate for easy ranking
         property['rank'] = rank
+        
+        # Retrive extended info from Zillow API
+        print (f"Retrieving property details for {rank} : ", property.get('zpid'))
+        zpid = property.get('zpid')
+        if zpid:
+            property_details = get_property_details(zpid)
+            if property_details:
+                property['details'] = property_details
 
     # Add rank to the *original* properties in processed_properties (important!)
     ranked_property_zpids = {prop['zpid'] for prop in top_properties if 'zpid' in prop} # Use a set for efficient lookup

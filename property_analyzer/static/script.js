@@ -96,10 +96,12 @@ function updateSidebar(properties) {
         propertyDiv.innerHTML = `
             ${addressLink}
             Price: $${property.price.toLocaleString()}<br>
-            ${property.cash_on_cash_return !== null ? `Cash-on-Cash Return: ${property.cash_on_cash_return.toFixed(2)}%<br>` : ''}
-            Bedrooms: ${property.bedrooms}, Bathrooms: ${property.bathrooms}<br>
             Rent: $${property.rentZestimate.toLocaleString()}<br>
+            Bedrooms: ${property.bedrooms}, Bathrooms: ${property.bathrooms}<br>
+            ${property.homeType !== null ? `Home Type: ${property.homeType}<br>` : ''}
+            ${property.cash_on_cash_return !== null ? `Cash-on-Cash Return: ${property.cash_on_cash_return.toFixed(2)}%<br>` : ''}
             ${property.daysOnZillow !== null ? `Days on Zillow: ${property.daysOnZillow}<br>` : ''}
+            ${property.details.schools[0].rating !== null ? `Schools Ratings: ${property.details.schools[0].rating.toLocaleString()} | ${property.details.schools[1].rating.toLocaleString()} | ${property.details.schools[2].rating.toLocaleString()}<br>` : ''}
             <hr>
         `;
 
@@ -141,9 +143,9 @@ function resetMarker(rank) {
         const icon = marker.getIcon();
         // Restore original size and anchor
         if (icon.options.originalSize) {
-           icon.options.iconSize = icon.options.originalSize;
-           icon.options.iconAnchor = icon.options.originalAnchor;
-           marker.setIcon(icon);
+            icon.options.iconSize = icon.options.originalSize;
+            icon.options.iconAnchor = icon.options.originalAnchor;
+            marker.setIcon(icon);
         }
 
         marker.setZIndexOffset(0); // Reset Z-index
@@ -190,7 +192,7 @@ function updateMap() {
             if (map) {
                 map.eachLayer(layer => {
                     if (layer instanceof L.Marker) {
-                         map.removeLayer(layer);
+                        map.removeLayer(layer);
                     }
                 });
             } else {
@@ -210,11 +212,11 @@ function updateMap() {
                         } else if (property.cash_on_cash_return >= -8 && property.cash_on_cash_return < -4) {
                             markerColorClass = 'orange-marker';
                         } else if (property.cash_on_cash_return >= -4 && property.cash_on_cash_return < 0) {
-                             markerColorClass = 'yellow-marker';
+                            markerColorClass = 'yellow-marker';
                         } else {
                             markerColorClass = 'green-marker';
                         }
-                     }
+                    }
 
                     // Add square class if it's a townhome or condo
                     if (property.homeType && (property.homeType.toLowerCase() === 'townhouse' || property.homeType.toLowerCase() === 'condo')) {
@@ -238,11 +240,11 @@ function updateMap() {
                     // Create the address link.  Critically, check for a valid zpid.
                     let popupContent = "";
                     if (property.zpid) {
-                         popupContent = `
+                        popupContent = `
                             <b><a href="https://www.zillow.com/homedetails/${property.zpid}_zpid/" target="_blank">${property.streetAddress}, ${property.city}, ${property.state} ${property.zipcode}</a></b><br>
                         `;
                     }
-                    else{
+                    else {
                         popupContent = `
                          <b>${property.streetAddress}, ${property.city}, ${property.state} ${property.zipcode}</b><br>
                         `;
@@ -277,8 +279,8 @@ function updateMap() {
                         this.closePopup();
                     });
 
-                   // Add click listener to open Zillow link
-                    marker.on('click', function() {
+                    // Add click listener to open Zillow link
+                    marker.on('click', function () {
                         if (property.zpid) {
                             window.open(`https://www.zillow.com/homedetails/${property.zpid}_zpid/`, '_blank');
                         }
@@ -325,7 +327,7 @@ controls.addEventListener('mouseleave', () => {
 window.addEventListener('resize', () => {
     setMapContainerHeight();
     if (map) {
-         map.invalidateSize();
+        map.invalidateSize();
     }
 });
 
