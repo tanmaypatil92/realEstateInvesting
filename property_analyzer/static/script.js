@@ -1,21 +1,21 @@
-// script.js
+// script.js (Corrected version - Addressing Sidebar Issue)
 
 let map;
-let controlsTimeout; // Variable to hold the timeout ID
+let controlsTimeout;
 let sidebarTimeout;
-let markerMap = new Map();
-
+let markerMap = new Map(); //  zpid: marker
+let rankedProperties = new Map(); //  zpid: property  (for ranked properties)
+let eventSource;
 
 function calculateMapHeight() {
-    // Consider the sidebar width
-    const sidebarWidth = window.innerWidth <= 768 ? 0 : 320; // Sidebar width, 0 if mobile
+    const sidebarWidth = window.innerWidth <= 768 ? 0 : 320;
     return window.innerHeight;
 }
 
 function setMapContainerHeight() {
     const mapContainer = document.getElementById('map-container');
     mapContainer.style.height = `${calculateMapHeight()}px`;
-    const sidebarWidth = window.innerWidth <= 768 ? 0 : 320; // Get sidebar width
+    const sidebarWidth = window.innerWidth <= 768 ? 0 : 320;
     mapContainer.style.width = `calc(100% - ${sidebarWidth}px)`;
 }
 
@@ -23,13 +23,10 @@ function initializeMap() {
     if (!map) {
         setMapContainerHeight();
         map = L.map('map').setView([33.92, -84.28], 13);
-
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
-
-        // Add event listener for map scrolling/interaction
-        map.on('mousedown zoomstart movestart', hideControls); // Hide on interaction
+        map.on('mousedown zoomstart movestart', hideControls);
     } else {
         setMapContainerHeight();
         map.invalidateSize();
@@ -46,16 +43,15 @@ function hideLoadingIndicator() {
 
 function showControls() {
     const controls = document.getElementById('controls');
-    controls.classList.add('visible');  // Use the 'visible' class
+    controls.classList.add('visible');
     controls.classList.remove('hidden');
-    clearTimeout(controlsTimeout); // Clear any existing timeout
+    clearTimeout(controlsTimeout);
 }
 
 function hideControls() {
     const controls = document.getElementById('controls');
-    controls.classList.add('hidden');  // Add the 'hidden' class
+    controls.classList.add('hidden');
     controls.classList.remove('visible');
-
 }
 
 function showSidebar() {
@@ -72,87 +68,88 @@ function hideSidebar() {
 }
 
 
-function updateSidebar(properties) {
+function updateSidebar(property) {
+    if (!property.rank) return;  // Only add/update ranked properties
+
     const sidebarContent = document.getElementById('sidebar-content');
-    sidebarContent.innerHTML = ''; // Clear previous content
+    const existingProperty = sidebarContent.querySelector(`.sidebar-property[data-zpid="${property.zpid}"]`); // Corrected selector
 
-    const validProperties = properties.filter(property => typeof property.rank === 'number');
-    const topProperties = validProperties.sort((a, b) => a.rank - b.rank).slice(0, 10);
-
-    topProperties.forEach(property => {
+    if (existingProperty) {
+        existingProperty.innerHTML = createPropertyHTML(property);
+    } else {
         const propertyDiv = document.createElement('div');
         propertyDiv.classList.add('sidebar-property');
-
-        let addressLink = "";
-        if (property.zpid) {
-            addressLink = `
-                <b><a href="https://www.zillow.com/homedetails/${property.zpid}_zpid/" target="_blank">${property.rank}. ${property.streetAddress}, ${property.city}, ${property.state} ${property.zipcode}</a></b><br>
-            `;
-        } else {
-            addressLink = `
-                <b>${property.rank}. ${property.streetAddress}, ${property.city}, ${property.state} ${property.zipcode}</b><br>
-            `;
-        }
-        propertyDiv.innerHTML = `
-            ${addressLink}
-            Price: $${property.price.toLocaleString()}<br>
-            Rent: $${property.rentZestimate.toLocaleString()}<br>
-            Bedrooms: ${property.bedrooms}, Bathrooms: ${property.bathrooms}<br>
-            ${property.homeType !== null ? `Home Type: ${property.homeType}<br>` : ''}
-            ${property.cash_on_cash_return !== null ? `Cash-on-Cash Return: ${property.cash_on_cash_return.toFixed(2)}%<br>` : ''}
-            ${property.daysOnZillow !== null ? `Days on Zillow: ${property.daysOnZillow}<br>` : ''}
-            ${property.details.schools[0].rating !== null ? `School Rating: ${property.details.schools[0].rating.toLocaleString()} | ` : ''}
-            ${property.details.schools[1].rating !== null ? `${property.details.schools[1].rating.toLocaleString()} | ` : ''}
-            ${property.details.schools[2].rating !== null ? `${property.details.schools[2].rating.toLocaleString()}<br>` : ''}
-            <hr>
-        `;
-
-        // Add mouseover and mouseout event listeners
-        propertyDiv.addEventListener('mouseover', () => {
-            highlightMarker(property.rank);
-        });
-        propertyDiv.addEventListener('mouseout', () => {
-            resetMarker(property.rank);
-        });
-
+        propertyDiv.dataset.zpid = property.zpid;  // Set data-zpid attribute
+        propertyDiv.innerHTML = createPropertyHTML(property);
+        propertyDiv.addEventListener('mouseover', () => highlightMarker(property.rank));
+        propertyDiv.addEventListener('mouseout', () => resetMarker(property.rank));
         sidebarContent.appendChild(propertyDiv);
-    });
+    }
     showSidebar();
+}
+
+function createPropertyHTML(property){
+    let addressLink = "";
+    if (property.zpid) {
+        addressLink = `
+            <b><a href="https://www.zillow.com/homedetails/${property.zpid}_zpid/" target="_blank">${property.rank}. ${property.streetAddress}, ${property.city}, ${property.state} ${property.zipcode}</a></b><br>
+        `;
+    } else {
+        addressLink = `
+            <b>${property.rank}. ${property.streetAddress}, ${property.city}, ${property.state} ${property.zipcode}</b><br>
+        `;
+    }
+    return `
+        ${addressLink}
+        Price: $${property.price.toLocaleString()}<br>
+        Rent: $${property.rentZestimate.toLocaleString()}<br>
+        Bedrooms: ${property.bedrooms}, Bathrooms: ${property.bathrooms}<br>
+        ${property.homeType !== null ? `Home Type: ${property.homeType}<br>` : ''}
+        ${property.cash_on_cash_return !== null ? `Cash-on-Cash Return: ${property.cash_on_cash_return.toFixed(2)}%<br>` : ''}
+        ${property.daysOnZillow !== null ? `Days on Zillow: ${property.daysOnZillow}<br>` : ''}
+        ${property.details && property.details.schools && property.details.schools[0] && property.details.schools[0].rating !== null ? `School Rating: ${property.details.schools[0].rating.toLocaleString()} | ` : ''}
+        ${property.details && property.details.schools && property.details.schools[1] && property.details.schools[1].rating !== null ? `${property.details.schools[1].rating.toLocaleString()} | ` : ''}
+        ${property.details && property.details.schools && property.details.schools[2] && property.details.schools[2].rating !== null ? `${property.details.schools[2].rating.toLocaleString()}<br>` : ''}
+        <hr>
+    `;
 }
 
 // Function to highlight a marker
 function highlightMarker(rank) {
-    const marker = markerMap.get(rank);
-    if (marker) {
-        const icon = marker.getIcon();
-        // Store original size and anchor
-        icon.options.originalSize = icon.options.iconSize;
-        icon.options.originalAnchor = icon.options.iconAnchor;
-
-        // Increase size and adjust anchor
-        icon.options.iconSize = [32, 32]; // Example larger size
-        icon.options.iconAnchor = [16, 32]; // Adjust anchor accordingly
-        marker.setIcon(icon);
-        marker.setZIndexOffset(1000); // Bring to front
-
+  // Find marker using rank
+    for (let [zpid, marker] of markerMap) {
+        const property = rankedProperties.get(zpid);
+        if (property && property.rank === rank) {
+            const icon = marker.getIcon();
+            icon.options.originalSize = icon.options.iconSize;
+            icon.options.originalAnchor = icon.options.iconAnchor;
+            icon.options.iconSize = [32, 32];
+            icon.options.iconAnchor = [16, 32];
+            marker.setIcon(icon);
+            marker.setZIndexOffset(1000);
+            break; // Important: Stop searching once found
+        }
     }
 }
 
 // Function to reset a marker's style
 function resetMarker(rank) {
-    const marker = markerMap.get(rank);
-    if (marker) {
-        const icon = marker.getIcon();
-        // Restore original size and anchor
-        if (icon.options.originalSize) {
-            icon.options.iconSize = icon.options.originalSize;
-            icon.options.iconAnchor = icon.options.originalAnchor;
-            marker.setIcon(icon);
+  // Find marker using rank
+    for (let [zpid, marker] of markerMap) {
+        const property = rankedProperties.get(zpid);
+        if (property && property.rank === rank) {
+          const icon = marker.getIcon();
+          if (icon.options.originalSize) {
+                icon.options.iconSize = icon.options.originalSize;
+                icon.options.iconAnchor = icon.options.originalAnchor;
+                marker.setIcon(icon);
+          }
+          marker.setZIndexOffset(0);
+          break;// Important: Stop searching once found
         }
-
-        marker.setZIndexOffset(0); // Reset Z-index
     }
 }
+
 
 function updateMap() {
     const zillowUrl = document.getElementById('zillowUrl').value;
@@ -162,8 +159,23 @@ function updateMap() {
     }
 
     showLoadingIndicator();
-    // Hide controls when updating
     hideControls();
+
+    if (eventSource) {
+        eventSource.close();
+        eventSource = null;
+    }
+
+    if (map) {
+        map.eachLayer(layer => {
+            if (layer instanceof L.Marker) {
+                map.removeLayer(layer);
+            }
+        });
+    }
+    markerMap.clear();
+    rankedProperties.clear(); // Clear the ranked properties
+    document.getElementById('sidebar-content').innerHTML = '';
 
     const loanDetails = {
         down_payment_percentage: parseFloat(document.getElementById('downPayment').value) / 100,
@@ -183,155 +195,110 @@ function updateMap() {
     const expenseRatesJson = JSON.stringify(expenseRates);
     const url = `/api/properties?zillow_url=${encodeURIComponent(zillowUrl)}&loan_details=${encodeURIComponent(loanDetailsJson)}&expense_rates=${encodeURIComponent(expenseRatesJson)}`;
 
-    fetch(url)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error(`HTTP error! status: ${response.status}`);
-            }
-            return response.json();
-        })
-        .then(properties => {
-            if (map) {
-                map.eachLayer(layer => {
-                    if (layer instanceof L.Marker) {
-                        map.removeLayer(layer);
-                    }
-                });
-            } else {
-                initializeMap();
-            }
-            markerMap.clear(); // Clear the map
+    eventSource = new EventSource(url);
+    let bounds = L.latLngBounds();
+    let validProperties = false;
 
-            const bounds = L.latLngBounds();
-            let validProperties = false;
+    // ... inside eventSource.onmessage = function(event) { ...
 
-            properties.forEach(property => {
-                if (property.latitude && property.longitude) {
-                    let markerColorClass = 'gray-marker';
-                    if (property.cash_on_cash_return !== null && property.rentZestimate != 0) {
-                        if (property.cash_on_cash_return < -8) {
-                            markerColorClass = 'red-marker';
-                        } else if (property.cash_on_cash_return >= -8 && property.cash_on_cash_return < -4) {
-                            markerColorClass = 'orange-marker';
-                        } else if (property.cash_on_cash_return >= -4 && property.cash_on_cash_return < 0) {
-                            markerColorClass = 'yellow-marker';
-                        } else {
-                            markerColorClass = 'green-marker';
-                        }
-                    }
+    eventSource.onmessage = function(event) {
+        const data = JSON.parse(event.data);
 
-                    // Add square class if it's a townhome or condo
-                    if (property.homeType && (property.homeType.toLowerCase() === 'townhouse' || property.homeType.toLowerCase() === 'condo')) {
-                        markerColorClass += ' square';
-                    }
+        // ... (previous error handling and end_of_stream handling) ...
+        if (data.error) {
+            console.error("Error from server:", data.error);
+            alert(`Error: ${data.error}`);
+            hideLoadingIndicator();
+            eventSource.close();
+            return;
+        }
 
-                    // Create the custom icon with the rank number *inside* the marker.
-                    let iconHtml = '';
-                    if (property.rank) {
-                        iconHtml = `<div class="marker-rank">${property.rank}</div>`;
-                    }
-
-                    const customIcon = L.divIcon({
-                        className: markerColorClass,
-                        html: iconHtml, // Add the rank HTML here
-                        iconSize: property.rank ? [16, 16] : [12, 12],  // Adjust size if it has a rank
-                        iconAnchor: property.rank ? [14, 14] : [10, 10],    // Adjust anchor accordingly
-                    });
-                    const marker = L.marker([property.latitude, property.longitude], { icon: customIcon });
-
-                    // Create the address link.  Critically, check for a valid zpid.
-                    let popupContent = "";
-                    if (property.zpid) {
-                        popupContent = `
-                            <b><a href="https://www.zillow.com/homedetails/${property.zpid}_zpid/" target="_blank">${property.streetAddress}, ${property.city}, ${property.state} ${property.zipcode}</a></b><br>
-                        `;
-                    }
-                    else {
-                        popupContent = `
-                         <b>${property.streetAddress}, ${property.city}, ${property.state} ${property.zipcode}</b><br>
-                        `;
-                    }
-
-
-                    popupContent += `
-                        Price: $${property.price.toLocaleString()}<br>
-                        Rent: $${property.rentZestimate.toLocaleString()}<br>
-                        Bedrooms: ${property.bedrooms}<br>
-                        Bathrooms: ${property.bathrooms}<br>
-                        Living Area: ${property.livingArea} sqft<br>
-                        Home Type: ${property.homeType}<br>
-                    `;
-                    if (property.rent_to_price_ratio !== null) {
-                        popupContent += `Rent-to-Price Ratio: ${property.rent_to_price_ratio.toFixed(2)}%<br>`;
-                    }
-                    if (property.annual_cash_flow !== null && property.cash_on_cash_return !== null) {
-                        popupContent += `Annual Cash Flow: $${property.annual_cash_flow.toFixed(2)}<br>`;
-                        popupContent += `Cash-on-Cash Return: ${property.cash_on_cash_return.toFixed(2)}%`;
-                    } else {
-                        popupContent += `Cash Flow/Return: N/A`;
-                    }
-
-                    marker.bindPopup(popupContent);
-
-                    // Add event listeners for hover
-                    marker.on('mouseover', function (e) {
-                        this.openPopup();
-                    });
-                    marker.on('mouseout', function (e) {
-                        this.closePopup();
-                    });
-
-                    // Add click listener to open Zillow link
-                    marker.on('click', function () {
-                        if (property.zpid) {
-                            window.open(`https://www.zillow.com/homedetails/${property.zpid}_zpid/`, '_blank');
-                        }
-                    });
-
-
-                    marker.addTo(map); // Add marker to the map *after* setting up event listeners
-
-                    bounds.extend([property.latitude, property.longitude]);
-                    validProperties = true;
-
-                    // Store the marker in the markerMap, using the rank as the key
-                    markerMap.set(property.rank, marker);
-                }
-            });
-
+        if (data.end_of_stream) {
+            console.log("End of stream received");
+            eventSource.close();
+            hideLoadingIndicator();
             if (validProperties) {
-                map.fitBounds(bounds);
+                map.fitBounds(bounds); //Final fit bounds
             }
             map.invalidateSize();
-            updateSidebar(properties); // Update the sidebar
+            return;
+        }
 
-        })
-        .catch(error => {
-            console.error('Error fetching data:', error);
-            alert(`Error fetching data: ${error.message}`);
-        })
-        .finally(() => {
-            hideLoadingIndicator();
-        });
+
+        // --- Main Property Handling ---
+        if (data.latitude && data.longitude) {
+            // ... (marker color, icon creation, etc. - all the same) ...
+            let markerColorClass = 'gray-marker';
+            if (data.cash_on_cash_return !== null && data.rentZestimate != 0) {
+                markerColorClass = data.cash_on_cash_return < -8 ? 'red-marker' :
+                                  data.cash_on_cash_return < -4 ? 'orange-marker' :
+                                  data.cash_on_cash_return < 0  ? 'yellow-marker' :
+                                                                  'green-marker';
+            }
+            if (data.homeType && (data.homeType.toLowerCase() === 'townhouse' || data.homeType.toLowerCase() === 'condo')) {
+                markerColorClass += ' square';
+            }
+
+            let iconHtml = data.rank ? `<div class="marker-rank">${data.rank}</div>` : '';
+            const customIcon = L.divIcon({
+                className: markerColorClass,
+                html: iconHtml,
+                iconSize: data.rank ? [16, 16] : [12, 12],
+                iconAnchor: data.rank ? [14, 14] : [10, 10],
+            });
+
+            // Use zpid as the key for markerMap
+            let marker = markerMap.get(data.zpid);
+            if (!marker) {
+                marker = L.marker([data.latitude, data.longitude], { icon: customIcon });
+                markerMap.set(data.zpid, marker); // Store by zpid
+                marker.addTo(map);
+            } else {
+                marker.setLatLng([data.latitude, data.longitude]);
+                marker.setIcon(customIcon); // Update icon (in case rank changed)
+            }
+
+            // --- Popup Content --- (same as before)
+            let popupContent = data.zpid
+                ? `<b><a href="https://www.zillow.com/homedetails/${data.zpid}_zpid/" target="_blank">${data.streetAddress}, ${data.city}, ${data.state} ${data.zipcode}</a></b><br>`
+                : `<b>${data.streetAddress}, ${data.city}, ${data.state} ${data.zipcode}</b><br>`;
+            popupContent += `Price: $${data.price.toLocaleString()}<br>Rent: $${data.rentZestimate.toLocaleString()}<br>Bedrooms: ${data.bedrooms}<br>Bathrooms: ${data.bathrooms}<br>Living Area: ${data.livingArea} sqft<br>Home Type: ${data.homeType}<br>`;
+            popupContent += data.rent_to_price_ratio !== null ? `Rent-to-Price Ratio: ${data.rent_to_price_ratio.toFixed(2)}%<br>` : '';
+            popupContent += data.annual_cash_flow !== null && data.cash_on_cash_return !== null ? `Annual Cash Flow: $${data.annual_cash_flow.toFixed(2)}<br>Cash-on-Cash Return: ${data.cash_on_cash_return.toFixed(2)}%` : 'Cash Flow/Return: N/A';
+            marker.bindPopup(popupContent);
+
+            marker.on('mouseover', function (e) { this.openPopup(); });
+            marker.on('mouseout', function (e) { this.closePopup(); });
+            marker.on('click', function () { if (data.zpid) { window.open(`https://www.zillow.com/homedetails/${data.zpid}_zpid/`, '_blank'); } });
+
+
+            bounds.extend([data.latitude, data.longitude]); // Extend bounds *every* time
+            validProperties = true;
+
+            // --- Centering and Zooming Logic ---
+            if (validProperties) {
+                 map.fitBounds(bounds);  // Fit bounds *every* time
+            }
+            if (data.rank) {
+                rankedProperties.set(data.zpid, data);
+                updateSidebar(data);
+            }
+
+        }
+    };
+
+    // ... (rest of the code: eventSource.onerror, event listeners, etc.) ...
+    eventSource.onerror = function(error) {
+        console.error("EventSource failed:", error);
+        alert("Error: Could not connect to the server for live updates.");
+        hideLoadingIndicator();
+        eventSource.close();
+    };
 }
 
-// Event listener for the update button
 document.getElementById('updateButton').addEventListener('click', updateMap);
-
-// Event listeners for showing controls on hover
 const controls = document.getElementById('controls');
 controls.addEventListener('mouseenter', showControls);
-controls.addEventListener('mouseleave', () => {
-    controlsTimeout = setTimeout(hideControls, 1000); // Adjust delay as needed (1 second here)
-});
-
-// Event listener for window resize
-window.addEventListener('resize', () => {
-    setMapContainerHeight();
-    if (map) {
-        map.invalidateSize();
-    }
-});
-
-// Initialize map on load
+controls.addEventListener('mouseleave', () => { controlsTimeout = setTimeout(hideControls, 1000); });
+window.addEventListener('resize', () => { setMapContainerHeight(); if (map) { map.invalidateSize(); } });
 initializeMap();
