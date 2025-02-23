@@ -101,7 +101,9 @@ function updateSidebar(properties) {
             ${property.homeType !== null ? `Home Type: ${property.homeType}<br>` : ''}
             ${property.cash_on_cash_return !== null ? `Cash-on-Cash Return: ${property.cash_on_cash_return.toFixed(2)}%<br>` : ''}
             ${property.daysOnZillow !== null ? `Days on Zillow: ${property.daysOnZillow}<br>` : ''}
-            ${property.details.schools[0].rating !== null ? `Schools Ratings: ${property.details.schools[0].rating.toLocaleString()} | ${property.details.schools[1].rating.toLocaleString()} | ${property.details.schools[2].rating.toLocaleString()}<br>` : ''}
+            ${property.details.schools[0].rating !== null ? `School Rating: ${property.details.schools[0].rating.toLocaleString()} | ` : ''}
+            ${property.details.schools[1].rating !== null ? `${property.details.schools[1].rating.toLocaleString()} | ` : ''}
+            ${property.details.schools[2].rating !== null ? `${property.details.schools[2].rating.toLocaleString()}<br>` : ''}
             <hr>
         `;
 
