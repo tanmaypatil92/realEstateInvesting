@@ -72,11 +72,11 @@ h1 {
 }
 
 .orange-marker {
-    background-color: rgba(255, 149, 0, 0.75);
+    background-color: rgb(228, 140, 63);
 }
 
 .yellow-marker {
-    background-color: rgb(255, 255, 0, 0.9);
+    background-color: rgb(169, 169, 5);
 }
 .green-marker {
     background-color: rgba(0, 128, 0, 0.75);
