@@ -15,54 +15,26 @@
 <body>
   <div id="controls">
     <h1>Cash Flow Finder</h1>
-    <div class="input-group">
       <label for="zillowUrl">Zillow URL:</label>
       <input type="text" id="zillowUrl" name="zillowUrl" placeholder="Enter Zillow URL"
         value="https://www.zillow.com/dunwoody-ga-30360/?searchQueryState=%7B%22pagination%22%3A%7B%7D%2C%22usersSearchTerm%22%3A%2230360%22%2C%22mapBounds%22%3A%7B%22west%22%3A-84.36232590551758%2C%22east%22%3A-84.16148209448242%2C%22south%22%3A33.89577159630012%2C%22north%22%3A33.96670114674591%7D%2C%22regionSelection%22%3A%5B%7B%22regionId%22%3A71076%2C%22regionType%22%3A7%7D%5D%2C%22isMapVisible%22%3Atrue%2C%22filterState%22%3A%7B%22price%22%3A%7B%22min%22%3A100000%7D%2C%22mp%22%3A%7B%22min%22%3A512%7D%2C%22sort%22%3A%7B%22value%22%3A%22globalrelevanceex%22%7D%2C%22ah%22%3A%7B%22value%22%3Atrue%7D%7D%2C%22isListVisible%22%3Atrue%2C%22mapZoom%22%3A13%7D">
       <button id="updateButton">Update Map</button>
-    </div>
-
-    <div class="input-row">
-      <div class="input-group">
-        <label for="downPayment">Down Payment %:</label>
-        <input type="number" id="downPayment" value="20">
-      </div>
-      <div class="input-group">
-        <label for="interestRate">Interest Rate %:</label>
-        <input type="number" id="interestRate" value="6.5" step="0.1">
-      </div>
-      <div class="input-group">
-        <label for="loanTerm">Loan Term (Years):</label>
-        <input type="number" id="loanTerm" value="30">
-      </div>
-    </div>
-    <div class="input-row">
-      <div class="input-group">
-        <label for="propMgmt">Prop Mgmt %:</label>
-        <input type="number" id="propMgmt" value="8">
-      </div>
-      <div class="input-group">
-        <label for="vacancy">Vacancy %:</label>
-        <input type="number" id="vacancy" value="5">
-      </div>
-      <div class="input-group">
-        <label for="maintenance">Maintenance %:</label>
-        <input type="number" id="maintenance" value="5">
-      </div>
-    </div>
-
-    <div class="input-row">
-      <div class="input-group">
-        <label for="insurance">Insurance %:</label>
-        <input type="number" id="insurance" value="0.5">
-      </div>
-      <div class="input-group">
-        <label for="propTaxes">Property Taxes %:</label>
-        <input type="number" id="propTaxes" value="1">
-      </div>
-    </div>
-
-
+      <label for="downPayment">Down Payment %:</label>
+      <input type="number" id="downPayment" value="20">
+      <label for="interestRate">Interest Rate %:</label>
+      <input type="number" id="interestRate" value="6.5" step="0.1">
+      <label for="loanTerm">Loan Term (Years):</label>
+      <input type="number" id="loanTerm" value="30">
+      <label for="propMgmt">Prop Mgmt %:</label>
+      <input type="number" id="propMgmt" value="8">
+      <label for="vacancy">Vacancy %:</label>
+      <input type="number" id="vacancy" value="5">
+      <label for="maintenance">Maintenance %:</label>
+      <input type="number" id="maintenance" value="5">
+      <label for="insurance">Insurance %:</label>
+      <input type="number" id="insurance" value="0.5">
+      <label for="propTaxes">Property Taxes %:</label>
+      <input type="number" id="propTaxes" value="1">
   </div>
 
   <div id="map-container">

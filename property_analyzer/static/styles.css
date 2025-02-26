@@ -14,30 +14,31 @@ html, body {
     height: 100%;
 }
 #controls {
-    padding: 16px;
+    padding: 5px 10px;
     background-color: #fff;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
     border-bottom: 1px solid #ddd;
-    text-align: center;
-    z-index: 1001; /* Higher than the map (1000) and overlay */
-    position: absolute; /* Absolute positioning */
-    top: -320px; /* Initially hidden above the viewport */
+    z-index: 1001;
+    position: relative;  /* Changed to relative */
+    top: 0; /* Always at the top */
     left: 0;
     width: 100%;
-    transition: top 0.3s ease; /* Smooth transition for hiding/showing */
+    /* Removed transition */
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: center;
 }
-#controls.visible {
-     top: 0; /* Visible at the top */
-}
+/* Removed .visible class */
+
 #controls label, #controls input, #controls button {
-  margin: 8px;
+  margin: 4px;
 }
-/* Style for input fields - Material Design-like */
 #controls input[type="number"], #controls input[type="text"] {
-    padding: 10px 16px;
+    padding: 8px 12px;
     border: 1px solid #ddd;
     border-radius: 4px;
-    font-size: 16px;
+    font-size: 14px;
     outline: none;
     transition: border-color 0.3s;
     box-sizing: border-box;
@@ -49,14 +50,13 @@ html, body {
 h1 {
     text-align: center;
     color: #3f51b5;
-    margin-bottom: 0;
-    margin-top: 0; /* Remove top margin */
-    padding: 10px 16px;
-    font-size: 1.5em; /*Adjust heading size*/
-    z-index: 1002; /* Higher than the map (1000) and overlay */
+    margin: 0;
+    padding: 0;
+    font-size: 1.2em;
+    z-index: 1002;
 }
 
-/* Custom marker colors - Base styles (circle) */
+/* ... (rest of your marker styles, no changes needed) ... */
 .red-marker, .orange-marker, .yellow-marker, .green-marker, .gray-marker {
     border-radius: 50%;  /* Default to circle */
     width: 12px;
@@ -112,11 +112,11 @@ h1 {
 #updateButton {
     background-color: #3f51b5;
     color: white;
-    padding: 10px 24px;
+    padding: 8px 16px; /* Reduced padding */
     border: none;
     border-radius: 4px;
     cursor: pointer;
-    font-size: 16px;
+    font-size: 14px; /*Reduced Font Size*/
     text-transform: uppercase;
     transition: background-color 0.3s;
     box-shadow: 0 2px 4px rgba(0,0,0,0.2);
@@ -156,44 +156,22 @@ h1 {
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
 }
-.input-group {
-    display: flex;
-    align-items: center;
-    margin-bottom: 8px;
-    flex-wrap: nowrap; /* Prevent wrapping */
-    justify-content: center;
-}
-
-.input-group label {
-    margin-right: 8px;
-    white-space: nowrap;
-}
-
-.input-row {
-    display: flex;
-    flex-wrap: wrap; /* Wrap on smaller screens */
-    justify-content: center; /* Center horizontally */
-    align-items: center; /* Center vertically */
-}
-
-/* styles.css (continued from previous response) */
-
 /* Sidebar Styles */
 #sidebar {
     position: absolute;
-    top: 0;
-    right: -320px; /* Initially hidden */
+    top: 60px;  /*  Starts below the controls, adjust based on #controls height */
+    right: -320px;
     width: 320px;
-    height: 100%;
+    height: calc(100% - 60px); /*  Fill remaining height, adjust as needed*/
     background-color: #f8f9fa;
     border-left: 1px solid #ddd;
-    overflow-y: auto; /* Enable vertical scrolling */
-    z-index: 1002; /* Above the map */
+    overflow-y: auto;
+    z-index: 1002;
     transition: right 0.3s ease;
 }
 
 #sidebar.visible {
-    right: 0; /* Show sidebar */
+    right: 0;
 }
 
 #sidebar h2 {
@@ -206,17 +184,17 @@ h1 {
 
 .sidebar-property {
     padding: 10px;
-    border-bottom: 1px solid #eee; /* Lighter separator */
-    font-size: 0.9em; /* Slightly smaller font */
+    border-bottom: 1px solid #eee;
+    font-size: 0.9em;
 }
 
-.sidebar-property a { /* Style for Zillow links in sidebar */
-    color: #007bff; /* Or your preferred link color */
-    text-decoration: none; /* Remove underline */
+.sidebar-property a {
+    color: #007bff;
+    text-decoration: none;
 }
 
 .sidebar-property a:hover {
-    text-decoration: underline; /* Add underline on hover */
+    text-decoration: underline;
 }
 .sidebar-property hr {
   margin-top: 0.5rem;
@@ -229,13 +207,21 @@ h1 {
 /* Responsive adjustments for sidebar and map */
 @media (max-width: 768px) {
     #sidebar {
-        width: 100%; /* Full width on mobile */
-        right: -100%; /* Hide completely on small screens by default*/
-        border-left: none; /* Remove border */
+        width: 100%;
+        right: -100%;
+        border-left: none;
+        top: 46px; /* Adjust for mobile top bar */
+        height: calc(100% - 46px); /*Adjust for height of top bar*/
     }
 
-    /* No need for a separate .visible class on mobile, it's either full-screen or hidden */
     #map-container {
-        width: 100%;  /* Map takes full width */
+        width: 100%;
+    }
+    #controls {
+        flex-direction: column;
+        padding: 10px;
+    }
+    #controls input, #controls label, #controls button{
+        width: auto; /*Let them take needed space*/
     }
 }

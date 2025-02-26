@@ -26,7 +26,7 @@ function initializeMap() {
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
         }).addTo(map);
-        map.on('mousedown zoomstart movestart', hideControls);
+        // Remove map.on listener, as controls are now always visible
     } else {
         setMapContainerHeight();
         map.invalidateSize();
@@ -41,18 +41,7 @@ function hideLoadingIndicator() {
     document.getElementById('loading-overlay').style.display = 'none';
 }
 
-function showControls() {
-    const controls = document.getElementById('controls');
-    controls.classList.add('visible');
-    controls.classList.remove('hidden');
-    clearTimeout(controlsTimeout);
-}
-
-function hideControls() {
-    const controls = document.getElementById('controls');
-    controls.classList.add('hidden');
-    controls.classList.remove('visible');
-}
+// Removed showControls and hideControls, and related event listeners
 
 function showSidebar() {
     const sidebar = document.getElementById('sidebar');
@@ -92,7 +81,7 @@ function createPropertyHTML(property){
     let addressLink = "";
     if (property.zpid) {
         addressLink = `
-            <b><a href="https://www.zillow.com/homedetails/${property.zpid}_zpid/" target="_blank">${property.rank}. ${property.streetAddress}, ${property.city}, ${property.state} ${property.zipcode}</a></b><br>
+            <b><a href="https://www.zillow.com/homedetails/<span class="math-inline">\{property\.zpid\}\_zpid/" target\="\_blank"\></span>{property.rank}. ${property.streetAddress}, ${property.city}, ${property.state} ${property.zipcode}</a></b><br>
         `;
     } else {
         addressLink = `
@@ -159,7 +148,7 @@ function updateMap() {
     }
 
     showLoadingIndicator();
-    hideControls();
+    //  hideControls() is removed
 
     if (eventSource) {
         eventSource.close();
@@ -287,7 +276,6 @@ function updateMap() {
         }
     };
 
-    // ... (rest of the code: eventSource.onerror, event listeners, etc.) ...
     eventSource.onerror = function(error) {
         console.error("EventSource failed:", error);
         alert("Error: Could not connect to the server for live updates.");
@@ -297,8 +285,6 @@ function updateMap() {
 }
 
 document.getElementById('updateButton').addEventListener('click', updateMap);
-const controls = document.getElementById('controls');
-controls.addEventListener('mouseenter', showControls);
-controls.addEventListener('mouseleave', () => { controlsTimeout = setTimeout(hideControls, 1000); });
+// Removed controls event listeners
 window.addEventListener('resize', () => { setMapContainerHeight(); if (map) { map.invalidateSize(); } });
 initializeMap();
